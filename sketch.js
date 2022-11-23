@@ -1,59 +1,95 @@
+//HARIHARAN FOURIER EPICYCLES
+
+let x = [];
+let y = [];
+
+let fourierX;
+let fourierY;
+
+
 var time = 0;
-var wave = [];
-var slider;
+var path = [];
 
-function setup(){
+function setup(){ 
 
-  createCanvas(1900 , 400);  
-  slider = createSlider(1 , 10 , 1);
+  createCanvas(800 , 600);  
+
+  for(let i = 0 ; i < 60 ; i++){
+
+    x[i] = i;
+    y[i] = i;
+    
+  }
+
+  // y = [100 , 100 , 100 , -100 , -100 , -100 , 100 , 100 , 100 , -100 , -100 , -100];
+
+  fourierX = dft(x);
+  fourierY = dft(y);
+
 }
-// let n = 1; 
-function draw(){
 
+function epicycle(x , y , rotation ,  fourier){
 
-  background(0);
-  let x = 0;
-  let y = 0;
-
-  translate(200 , 200);
-
-  for( let i = 0 ; i < slider.value(); i++){
+  for( let i = 0 ; i < fourier.length; i++){
 
     let prevx = x;
     let prevy = y;
     
-    n = 2 * i + 1;
-    let raduis = 50 * (4 / (n * PI)); 
-
+    let freq = fourier[i].freq;
+    let raduis = fourier[i].amp;
+    let phase = fourier[i].phase; 
     
-    x += raduis * cos(n * time);
-    y += raduis * sin(n * time);    
-  
-    time += 0.05;
-
+    x += raduis * cos(freq * time + phase + rotation);
+    y += raduis * sin(freq * time + phase + rotation);    
+      
     noFill();
     stroke(255 , 100);
     ellipse(prevx , prevy , raduis*2);
 
     stroke(255);
     line(prevx , prevy , x , y );
- 
+    
   }
-  wave.unshift(y);
 
+  return createVector(x , y);
+
+}
+
+
+// let n = 1; 
+function draw(){
+
+
+  background(0);
+  // let x = 0;
+  // let y = 0;
+
+  // translate(200 , 200);
+
+  let vx = epicycle(100 , 200 , 0 ,  fourierX);
+  let vy = epicycle(300 , 200 , HALF_PI , fourierY);
+  
+  let v =  createVector(vx.x , vy.y);
+
+  path.unshift(v);
+  
+
+  // translate(200 , 0);
+  line(vx.x , vx.y , v.x , v.y);
+  line(vy.x , vy.y , v.x , v.y);
 
   beginShape();
-  translate(200 , 0);
-  line(x-200 , y , 0 , wave[0]);
-  for(let i = 0 ; i < wave.length ; i++){
+  for(let i = 0 ; i < path.length ; i++){
     // point(i , wave[i]);
-    vertex(i , wave[i]);
+    vertex(path[i].x , path[i].y);
   }
   endShape()
+  
+  let dt = TWO_PI / fourierY.length;
+  time += dt;
 
-
-  if (wave.length > 1000){
-    wave.pop();
-  }
+  // if (wave.length > 1000){
+  //   wave.pop();
+  // }
   
 }
